@@ -131,3 +131,6 @@ dmypy.json
 # Ignore vim editor temp files
 .swo
 .swp
+
+# Ignore all log files
+.log

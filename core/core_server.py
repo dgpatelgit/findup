@@ -5,17 +5,17 @@ import logging
 from time import sleep
 
 # Scan file package for scanning all files.
-from scanfile import ScanFile
+from scan_file import ScanFile
 
 
 # Create a new logger for core application
-log = logging.getLogger('CORE')
+log = logging.getLogger("CORE")
 
 # Set log level
 log.setLevel(logging.DEBUG)
 
 # Create file handler for logger to store logs in file
-fh = logging.FileHandler('log_core.txt')
+fh = logging.FileHandler("monitor_server.log")
 fh.setLevel(logging.INFO)
 
 # Create a console hanlder with high level of logs
@@ -23,7 +23,7 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 
 # Create log formatters and apply to all loggers.
-frmt = logging.Formatter('%(asctime)s | %(name)s | %(levelname)s => %(message)s')
+frmt = logging.Formatter("%(asctime)s | %(name)s | %(levelname)s => %(message)s")
 fh.setFormatter(frmt)
 ch.setFormatter(frmt)
 
@@ -41,13 +41,15 @@ log.info("Empty scan file object created")
 log.critical("Core server entering infinite loop")
 while True:
     try:
+        # Sleep at the beginig, so that even exception cases are covered.
+        sleep(3)
+
         # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
         rootPath = "/home/dgpatel"
 
         log.info("Setting a new root path: %s", rootPath)
         scanFile.setRootPath(rootPath)
-
-        sleep(10)
+        scanFile.scan()
 
         log.critical("Gracefully terminating the core server")
         break
@@ -58,8 +60,9 @@ while True:
         raise
 
     # All other exceptions should not kill the server.
-    except:
-        log.error("An exception occurred in core server loop")
+    except Exception as ex:
+        log.error("An exception occurred in core server loop: %s", ex)
+
     finally:
         log.warning("Finally block is empty")
 
