@@ -55,12 +55,12 @@ while True:
         # Add new scan
         timestamp = int(round(time.time() * 1000))
         query = "INSERT INTO scan(id, name, root_path, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?)"
-        params = (timestamp, "Test Scan", "/home/dgpatel/Documents", timestamp, timestamp)
+        params = (timestamp, "Test Scan", "/home/dgpatel/Documents/Personal/Code/findup/", timestamp, timestamp)
         scanId = db.execInsert(query, params, True)
         log.critical("Got new scan id: %d", scanId)
 
         # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
-        rootPath = "/home/dgpatel/Documents"
+        rootPath = "/home/dgpatel/Documents/Personal/Code/findup/"
 
         log.info("Setting a new root path: %s", rootPath)
         scanFile.setConfig(scanId, rootPath)
