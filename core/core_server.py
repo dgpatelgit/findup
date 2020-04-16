@@ -8,8 +8,9 @@ import time
 # Include database class
 from sqlite_db import DB
 
-# Scan file package for scanning all files.
+# Import internal package.
 from scan_file import ScanFile
+from scan import Scan
 
 
 # Create a new logger for core application
@@ -45,6 +46,10 @@ log.info("Created database object")
 scanFile = ScanFile()
 log.info("Empty scan file object created")
 
+# Create a scan object
+scan = Scan()
+log.critical("Created a scan object")
+
 # Entering main loop now.
 log.critical("Core server entering infinite loop")
 while True:
@@ -52,19 +57,13 @@ while True:
         # Sleep at the beginig, so that even exception cases are covered.
         sleep(3)
 
+        # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
+        rootPath = "/home/dgpatel/Documents/Personal/Code/findup/core"
+
         # Add new scan
         timestamp = int(round(time.time() * 1000))
-        query = "INSERT INTO scan(id, name, root_path, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?)"
-        params = (timestamp, "Test Scan", "/home/dgpatel/Documents/Personal/Code/findup/", timestamp, timestamp)
-        scanId = db.execInsert(query, params, True)
-        log.critical("Got new scan id: %d", scanId)
-
-        # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
-        rootPath = "/home/dgpatel/Documents/Personal/Code/findup/"
-
-        log.info("Setting a new root path: %s", rootPath)
-        scanFile.setConfig(scanId, rootPath)
-        scanFile.scan()
+        scan.insert(f"Test {timestamp}", rootPath)
+        scan.process()
 
         log.critical("Gracefully terminating the core server")
         break

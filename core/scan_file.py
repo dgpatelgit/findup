@@ -19,9 +19,10 @@ class ScanFile:
     # Default constructor to set empty values to root folder
     def __init__(self):
         self.clog = logging.getLogger("CORE.SCAN_FILE")
-        self.clog.info("Setting up scan file object without root path")
         self.scanId = 0
         self.rootPath = None
+
+        self.clog.info("Setting up scan file object without root path")
 
         # Create database object
         self.db = DB()

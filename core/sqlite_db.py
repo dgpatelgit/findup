@@ -24,8 +24,9 @@ class DB:
             query = '''
                 CREATE TABLE IF NOT EXISTS "scan" (
                     "id"	INTEGER PRIMARY KEY AUTOINCREMENT,
-                    "name"	TEXT,
+                    "name"	VARCHAR(50),
                     "root_path"	TEXT,
+                    "state" INTEGER,
                     "created_timestamp"	INTEGER,
                     "modified_timestamp"	INTEGER
                 );
@@ -59,7 +60,7 @@ class DB:
         """
         
         #sql = 'INSERT INTO scan(id, name, root_path, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?)'
-        self.clog.info(f"Executing insert query: {query}")
+        self.clog.info(f"Executing insert query: {query} params: {params}")
 
         cur = self.conn.cursor()
         if params is not None:
@@ -80,7 +81,7 @@ class DB:
         :param commit_immediately: If True, query will be commit to DB after execution, if False, query will be executed without commit. Caller must ensure to call commit() function once done with all insertions.
         :return: Nothing.
         """
-        self.clog.info(f"Executing delete query: {query}")
+        self.clog.info(f"Executing delete query: {query} params: {params}")
 
         cur = self.conn.cursor()
         if params is not None:
@@ -97,4 +98,23 @@ class DB:
         :return: Nothing.
         """
         self.conn.commit()
+
+
+    def fetchAll(self, query, params):
+        """
+        Fetches all the rows as per query and params.
+        If params is None, its is ignored.
+        :return: Collection of tuple of rows matching query
+        """
+        self.clog.info(f"Executing select query: {query}")
+
+        cur = self.conn.cursor()
+        if params is not None:
+            cur.execute(query, params)
+        else:
+            cur.execute(query)
+
+        return cur.fetchall()
+
+
 
