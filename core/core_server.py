@@ -3,6 +3,10 @@ import logging
 
 # Sleep function for main loop
 from time import sleep
+import time
+
+# Include database class
+from sqlite_db import DB
 
 # Scan file package for scanning all files.
 from scan_file import ScanFile
@@ -33,6 +37,10 @@ log.addHandler(ch)
 
 log.info("Starting core server")
 
+# Create database object
+db = DB()
+log.info("Created database object")
+
 # Create scan file object
 scanFile = ScanFile()
 log.info("Empty scan file object created")
@@ -44,11 +52,18 @@ while True:
         # Sleep at the beginig, so that even exception cases are covered.
         sleep(3)
 
+        # Add new scan
+        timestamp = int(round(time.time() * 1000))
+        query = "INSERT INTO scan(id, name, root_path, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?)"
+        params = (timestamp, "Test Scan", "/home/dgpatel/Documents", timestamp, timestamp)
+        scanId = db.execInsert(query, params, True)
+        log.critical("Got new scan id: %d", scanId)
+
         # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
-        rootPath = "/home/dgpatel"
+        rootPath = "/home/dgpatel/Documents"
 
         log.info("Setting a new root path: %s", rootPath)
-        scanFile.setRootPath(rootPath)
+        scanFile.setConfig(scanId, rootPath)
         scanFile.scan()
 
         log.critical("Gracefully terminating the core server")
