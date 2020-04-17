@@ -9,7 +9,6 @@ import time
 from sqlite_db import DB
 
 # Import internal package.
-from scan_file import ScanFile
 from scan import Scan
 
 
@@ -42,10 +41,6 @@ log.info("Starting core server")
 db = DB()
 log.info("Created database object")
 
-# Create scan file object
-scanFile = ScanFile()
-log.info("Empty scan file object created")
-
 # Create a scan object
 scan = Scan()
 log.critical("Created a scan object")
@@ -58,7 +53,7 @@ while True:
         sleep(3)
 
         # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
-        rootPath = "/home/dgpatel/Documents/Personal/Code/findup/core"
+        rootPath = "/home/dgpatel/Documents/tbd"
 
         # Add new scan
         timestamp = int(round(time.time() * 1000))

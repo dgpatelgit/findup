@@ -27,6 +27,9 @@ class DB:
                     "name"	VARCHAR(50),
                     "root_path"	TEXT,
                     "state" INTEGER,
+                    "folder_count" INTEGER,
+                    "file_count" INTEGER,
+                    "total_size_in_bytes" INTEGER,
                     "created_timestamp"	INTEGER,
                     "modified_timestamp"	INTEGER
                 );
@@ -34,13 +37,14 @@ class DB:
             self.execInsert(query, None, True)
 
             query = '''
-                CREATE TABLE IF NOT EXISTS "file" (
+                CREATE TABLE IF NOT EXISTS "fsobject" (
                     "id"	INTEGER,
                     "scan_id"	INTEGER,
                     "type"	INTEGER,
                     "full_path"	TEXT,
+                    "state" INTEGER,
                     "size_in_bytes"	INTEGER,
-                    "content_check_sum"	TEXT,
+                    "content_hash"	TEXT,
                     "created_timestamp"	INTEGER,
                     "modified_timestamp"	INTEGER
                 );
