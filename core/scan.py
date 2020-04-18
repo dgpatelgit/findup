@@ -10,7 +10,8 @@ class Scan:
   # Scan states are as below.
   SCAN_STATE_PENDING = 1
   SCAN_STATE_SCANNED = 2
-  SCAN_STATE_COMPLETED = 3
+  SCAN_STATE_UPDATE_FOLDER_SIZE = 3
+  SCAN_STATE_COMPLETED = 4
 
   def __init__(self):
     # Create logger
@@ -27,9 +28,9 @@ class Scan:
     Function creates a new scan entry in the databse with pending as status.
     """
     timestamp = int(round(time.time() * 1000))
-    query = "INSERT INTO scan(id, name, root_path, state, created_timestamp, modified_timestamp) \
-      VALUES (?, ?, ?, ?, ?, ?)"
-    params = (timestamp, name, rootPath, self.SCAN_STATE_PENDING, timestamp, timestamp)
+    query = "INSERT INTO scan(name, root_path, state, created_timestamp, modified_timestamp) \
+      VALUES (?, ?, ?, ?, ?)"
+    params = (name, rootPath, self.SCAN_STATE_PENDING, timestamp, timestamp)
     newScanId = self.db.execInsert(query, params, True)
     
     self.clog.critical("Created a new scan with id: %d", newScanId)
@@ -46,6 +47,7 @@ class Scan:
     sm = {
       self.SCAN_STATE_PENDING: self.handlePendingState,
       self.SCAN_STATE_SCANNED: self.handleScannedState,
+      self.SCAN_STATE_UPDATE_FOLDER_SIZE: self.handleUpdateFolderSizeState,
       self.SCAN_STATE_COMPLETED: self.handleCompletedState
     }
 
@@ -83,39 +85,46 @@ class Scan:
     # 2.b.1 Identify and mark duplicate files
     self.fsobject.markDuplicateFiles()
 
-    # 2.b.2 Call next state handler
+    # 2.b.2 call next state handler
+    self.handleUpdateFolderSizeState(scan)
+
+  def handleUpdateFolderSizeState(self, scan):
+    # 2.c Scan is in UPDATE_FOLDER_SIZE state
+    query = f"UPDATE scan SET state = {self.SCAN_STATE_UPDATE_FOLDER_SIZE} WHERE id = {scan[0]}"
+    self.db.execDelete(query, None, True)
+
+    # 2.c.1 Update all folder size by summing up the size of the folder and files it has.
+    self.fsobject.updateFolderSize()
+
+    # 2.c.2 Call next state handler
     self.handleCompletedState(scan)
 
   def handleCompletedState(self, scan):
-    # 2.c Scan state is COMPLETED
+    # 2.d Scan state is COMPLETED
     query = f"UPDATE scan SET state = {self.SCAN_STATE_COMPLETED} WHERE id = {scan[0]}"
     self.db.execDelete(query, None, True)
 
   def scanObjectsAndAdd(self, scanId, rootPath):
-    objectId = scanId
     totalFolders = 0
     totalFiles = 0
     totalSizeInBytes = 0
 
+    # Insert main path as root.
+    totalFolders += 1
+    self.fsobject.insert(self.fsobject.FSOBJECT_FOLDER, None, rootPath, -1, True)
+
     for parent, dirs_list, files_list in os.walk(rootPath):
       # Add all directory objects.
-      for dir in dirs_list:
+      for d in dirs_list:
         totalFolders += 1
-        objectId += 1
-        folderPath = os.path.join(parent, dir)
-        folderSize = os.path.getsize(folderPath)
-        self.fsobject.insert(objectId, self.fsobject.FSOBJECT_FOLDER, folderPath, folderSize, False)
-
-      # Commit all directory enteries to db.
-      self.fsobject.commitTransactions()
+        self.fsobject.insert(self.fsobject.FSOBJECT_FOLDER, parent, d, -1, True)
 
       # Add all file objects.
-      for file in files_list:
+      for f in files_list:
         totalFiles += 1
-        objectId += 1
-        filePath = os.path.join(parent, file)
+        filePath = os.path.join(parent, f)
         fileSize = os.path.getsize(filePath)
-        self.fsobject.insert(objectId, self.fsobject.FSOBJECT_FILE, filePath, fileSize, False)
+        self.fsobject.insert(self.fsobject.FSOBJECT_FILE, parent, f, fileSize, False)
         
         totalSizeInBytes += fileSize
 

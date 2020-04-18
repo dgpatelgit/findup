@@ -9,50 +9,47 @@ class DB:
         required tables if db is created for the first time.
         """
         self.clog = logging.getLogger("CORE.DB")
-        self.conn = None
 
-        try:
-            # Create db folder if not exists.
-            dbFolder = "./db"
-            os.makedirs(dbFolder, exist_ok=True)
+        # Create db folder if not exists.
+        dbFolder = "./db"
+        os.makedirs(dbFolder, exist_ok = True)
 
-            # Opens / creates a new database file.
-            dbFile = f"{dbFolder}/findup.db"
-            self.conn = sqlite3.connect(dbFile)
+        # Opens / creates a new database file.
+        dbFile = f"{dbFolder}/findup.db"
+        self.conn = sqlite3.connect(dbFile)
 
-            # Create scan table if not exists.
-            query = '''
-                CREATE TABLE IF NOT EXISTS "scan" (
-                    "id"	INTEGER PRIMARY KEY AUTOINCREMENT,
-                    "name"	VARCHAR(50),
-                    "root_path"	TEXT,
-                    "state" INTEGER,
-                    "folder_count" INTEGER,
-                    "file_count" INTEGER,
-                    "total_size_in_bytes" INTEGER,
-                    "created_timestamp"	INTEGER,
-                    "modified_timestamp"	INTEGER
-                );
-            '''
-            self.execInsert(query, None, True)
+    def createDbs(self):
+        # Create scan table if not exists.
+        query = '''
+            CREATE TABLE IF NOT EXISTS "scan" (
+                "id"                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                "name"                  VARCHAR(50),
+                "root_path"             TEXT,
+                "state"                 INTEGER,
+                "folder_count"          INTEGER,
+                "file_count"            INTEGER,
+                "total_size_in_bytes"   INTEGER,
+                "created_timestamp"     INTEGER,
+                "modified_timestamp"	INTEGER
+            );
+        '''
+        self.execInsert(query, None, True)
 
-            query = '''
-                CREATE TABLE IF NOT EXISTS "fsobject" (
-                    "id"	INTEGER,
-                    "scan_id"	INTEGER,
-                    "type"	INTEGER,
-                    "full_path"	TEXT,
-                    "state" INTEGER,
-                    "size_in_bytes"	INTEGER,
-                    "content_hash"	TEXT,
-                    "created_timestamp"	INTEGER,
-                    "modified_timestamp"	INTEGER
-                );
-            '''
-            self.execInsert(query, None, True)
-
-        except Exception as ex:
-            self.clog.error("Exception occured: %s\ndb file: %s", ex, dbFile)
+        query = '''
+            CREATE TABLE IF NOT EXISTS "fsobject" (
+                "id"                    INTEGER PRIMARY KEY AUTOINCREMENT,
+                "scan_id"               INTEGER,
+                "parent_id"             INTEGER,
+                "type"                  INTEGER,
+                "full_path"             TEXT,
+                "state"                 INTEGER,
+                "size_in_bytes"         INTEGER,
+                "content_hash"          TEXT,
+                "created_timestamp"     INTEGER,
+                "modified_timestamp"	INTEGER
+            );
+        '''
+        self.execInsert(query, None, True)
 
     def execInsert(self, query, params, commit_immediately):
         """
@@ -62,8 +59,7 @@ class DB:
         :param commit_immediately: If True, query will be commit to DB after execution, if False, query will be executed without commit. Caller must ensure to call commit() function once done with all insertions.
         :return: Last inserted Id.
         """
-        
-        #sql = 'INSERT INTO scan(id, name, root_path, created_timestamp, modified_timestamp) VALUES (?, ?, ?, ?, ?)'
+
         self.clog.info(f"Executing insert query: {query} params: {params}")
 
         cur = self.conn.cursor()

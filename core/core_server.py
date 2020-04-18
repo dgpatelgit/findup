@@ -40,6 +40,8 @@ log.info("Starting core server")
 # Create database object
 db = DB()
 log.info("Created database object")
+db.createDbs()
+log.info("Created required database tables")
 
 # Create a scan object
 scan = Scan()
