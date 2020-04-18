@@ -15,7 +15,7 @@ class Hash:
     self.filePath = filePath
     self.fileHash = self.compute()
 
-  def getHash(self):
+  def getFileHash(self):
     return self.fileHash
 
   def compute(self):
@@ -26,3 +26,8 @@ class Hash:
         sha256Hash.update(byteBlock)
 
       return sha256Hash.hexdigest()
+
+  def computeStringHash(self, data):
+    sha256Hash = hashlib.sha256()
+    sha256Hash.update(data.encode('utf-8'))
+    return sha256Hash.hexdigest()

@@ -11,7 +11,8 @@ class Scan:
   SCAN_STATE_PENDING = 1
   SCAN_STATE_SCANNED = 2
   SCAN_STATE_UPDATE_FOLDER_SIZE = 3
-  SCAN_STATE_COMPLETED = 4
+  SCAN_STATE_DUPLICATE_FOLDER = 4
+  SCAN_STATE_COMPLETED = 5
 
   def __init__(self):
     # Create logger
@@ -48,6 +49,7 @@ class Scan:
       self.SCAN_STATE_PENDING: self.handlePendingState,
       self.SCAN_STATE_SCANNED: self.handleScannedState,
       self.SCAN_STATE_UPDATE_FOLDER_SIZE: self.handleUpdateFolderSizeState,
+      self.SCAN_STATE_DUPLICATE_FOLDER: self.handleDuplicateFolderState,
       self.SCAN_STATE_COMPLETED: self.handleCompletedState
     }
 
@@ -97,6 +99,17 @@ class Scan:
     self.fsobject.updateFolderSize()
 
     # 2.c.2 Call next state handler
+    self.handleDuplicateFolderState(scan)
+
+  def handleDuplicateFolderState(self, scan):
+    # 2.d Scan is in DUPLICATE FOLDER state
+    query = f"UPDATE scan SET state = {self.SCAN_STATE_DUPLICATE_FOLDER} WHERE id = {scan[0]}"
+    self.db.execDelete(query, None, True)
+
+    # 2.d.1 Update all folder as duplicate, if all its files and sub folders are duplicate
+    self.fsobject.markFolderAsDuplicate()
+
+    # 2.d.2 Call next state handler
     self.handleCompletedState(scan)
 
   def handleCompletedState(self, scan):
