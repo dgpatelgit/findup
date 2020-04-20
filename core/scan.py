@@ -1,8 +1,8 @@
 import os
 import time
 import logging
-from sqlite_db import DB
-from fsobject import FsObject
+from core.sqlite_db import DB
+from core.fsobject import FsObject
 
 # Class to manage all scan request, it creates new request, checks for pending request 
 # and tries to complete them in order of their request.
@@ -33,7 +33,7 @@ class Scan:
       VALUES (?, ?, ?, ?, ?)"
     params = (name, rootPath, self.SCAN_STATE_PENDING, timestamp, timestamp)
     newScanId = self.db.execInsert(query, params, True)
-    
+
     self.clog.critical("Created a new scan with id: %d", newScanId)
 
   def process(self):
@@ -62,11 +62,11 @@ class Scan:
 
       # 2. Set scan id for FS object.
       self.fsobject.setScanId(pScan[0])
-      
+
       # Based on status of the scan, perform action.
       handler = sm.get(pScan[1], lambda: "Invalid state")
       handler(pScan)
-      
+
   def handlePendingState(self, scan):
     # 2.a Scan is in PENDING state
 
@@ -138,7 +138,7 @@ class Scan:
         filePath = os.path.join(parent, f)
         fileSize = os.path.getsize(filePath)
         self.fsobject.insert(self.fsobject.FSOBJECT_FILE, parent, f, fileSize, False)
-        
+
         totalSizeInBytes += fileSize
 
       # Commit all file enteries to db.
@@ -149,3 +149,14 @@ class Scan:
     self.db.execDelete(query, None, True)
 
     self.clog.critical("Scan id: %ld, Added total folders: %d and files: %d", scanId, totalFolders, totalFiles)
+
+  def getReadableState(self, state):
+    d = {
+      self.SCAN_STATE_PENDING: "PENDING",
+      self.SCAN_STATE_SCANNED: "OBJECT SCAN COMPLETE",
+      self.SCAN_STATE_UPDATE_FOLDER_SIZE: "FOLDER SIZE UPDATED",
+      self.SCAN_STATE_DUPLICATE_FOLDER: "MARKING DUPLICATE FOLDER",
+      self.SCAN_STATE_COMPLETED: "COMPLETED"
+    }
+
+    return d[state]

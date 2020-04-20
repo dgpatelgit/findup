@@ -1,8 +1,8 @@
 import os
 import time
 import logging
-from sqlite_db import DB
-from hash import Hash
+from core.sqlite_db import DB
+from core.hash import Hash
 
 # Class object stores and retrieves file system objects i.e., files and directories
 class FsObject:

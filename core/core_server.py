@@ -6,10 +6,10 @@ from time import sleep
 import time
 
 # Include database class
-from sqlite_db import DB
+from core.sqlite_db import DB
 
 # Import internal package.
-from scan import Scan
+from core.scan import Scan
 
 
 # Create a new logger for core application
