@@ -12,7 +12,7 @@ import time
 from core.sqlite_db import DB
 
 # Import internal package.
-from core.scan import Scan
+from core.main_menu import MainMenu
 
 
 # Create a new logger for core application
@@ -47,24 +47,16 @@ log.info("Created database object")
 db.createDbs()
 log.info("Created required database tables")
 
-# Create a scan object
-scan = Scan()
-log.critical("Created a scan object")
+# Create main menu object
+mainMenu = MainMenu()
+log.info("Created main menu object")
 
 # Entering main loop now.
 log.critical("Core server entering infinite loop")
 while True:
     try:
-        # Sleep at the beginig, so that even exception cases are covered.
-        sleep(3)
-
-        # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
-        rootPath = "/Users/dpatel/Documents/code/kiott-qa/NimishaFirstApp"
-
-        # Add new scan
-        timestamp = int(round(time.time() * 1000))
-        scan.insert("Test {timestamp}".format(timestamp=timestamp), rootPath)
-        scan.process()
+        # display menu main and it will continue till exit is pressed.
+        mainMenu.display()
 
         log.critical("Gracefully terminating the core server")
         break
