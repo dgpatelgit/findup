@@ -2,6 +2,7 @@ import logging
 import os
 import sqlite3
 
+
 class DB:
     def __init__(self):
         """
@@ -12,10 +13,10 @@ class DB:
 
         # Create db folder if not exists.
         dbFolder = "./db"
-        os.makedirs(dbFolder, exist_ok = True)
+        os.makedirs(name=dbFolder, exist_ok=True)
 
         # Opens / creates a new database file.
-        dbFile = f"{dbFolder}/findup.db"
+        dbFile = "{dbFolder}/findup.db".format(dbFolder=dbFolder)
         self.conn = sqlite3.connect(dbFile)
 
     def createDbs(self):
@@ -60,7 +61,8 @@ class DB:
         :return: Last inserted Id.
         """
 
-        self.clog.info(f"Executing insert query: {query} params: {params}")
+        self.clog.info("Executing insert query: {query} params: {params}".format(
+            query=query, params=params))
 
         cur = self.conn.cursor()
         if params is not None:
@@ -81,7 +83,8 @@ class DB:
         :param commit_immediately: If True, query will be commit to DB after execution, if False, query will be executed without commit. Caller must ensure to call commit() function once done with all insertions.
         :return: Nothing.
         """
-        self.clog.info(f"Executing delete query: {query} params: {params}")
+        self.clog.info("Executing delete query: {query} params: {params}".format(
+            query=query, params=params))
 
         cur = self.conn.cursor()
         if params is not None:
@@ -99,14 +102,13 @@ class DB:
         """
         self.conn.commit()
 
-
     def fetchAll(self, query, params):
         """
         Fetches all the rows as per query and params.
         If params is None, its is ignored.
         :return: Collection of tuple of rows matching query
         """
-        self.clog.info(f"Executing select query: {query}")
+        self.clog.info("Executing select query: {query}".format(query=query))
 
         cur = self.conn.cursor()
         if params is not None:
@@ -115,6 +117,4 @@ class DB:
             cur.execute(query)
 
         return cur.fetchall()
-
-
 

@@ -1,6 +1,9 @@
 # Required for logging across app
 import logging
 
+# To get information about any exception
+import traceback
+
 # Sleep function for main loop
 from time import sleep
 import time
@@ -27,7 +30,8 @@ ch = logging.StreamHandler()
 ch.setLevel(logging.INFO)
 
 # Create log formatters and apply to all loggers.
-frmt = logging.Formatter("%(asctime)s | %(name)s | %(levelname)s => %(message)s")
+frmt = logging.Formatter(
+    "%(asctime)s | %(name)s | %(levelname)s => %(message)s")
 fh.setFormatter(frmt)
 ch.setFormatter(frmt)
 
@@ -55,11 +59,11 @@ while True:
         sleep(3)
 
         # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
-        rootPath = "/home/dgpatel/Documents/tbd"
+        rootPath = "/Users/dpatel/Documents/code/kiott-qa/NimishaFirstApp"
 
         # Add new scan
         timestamp = int(round(time.time() * 1000))
-        scan.insert(f"Test {timestamp}", rootPath)
+        scan.insert("Test {timestamp}".format(timestamp=timestamp), rootPath)
         scan.process()
 
         log.critical("Gracefully terminating the core server")
@@ -73,9 +77,9 @@ while True:
     # All other exceptions should not kill the server.
     except Exception as ex:
         log.error("An exception occurred in core server loop: %s", ex)
+        traceback.print_exception(None, ex, ex.__traceback__)
 
     finally:
         log.warning("Finally block is empty")
 
 log.critical("Core server terminated")
-

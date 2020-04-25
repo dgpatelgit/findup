@@ -58,11 +58,11 @@ class Scan:
 
         # 1. Get pending scans
         query = "SELECT id, state, name, root_path FROM scan WHERE state = ?"
-        params = (f"{self.SCAN_STATE_PENDING}")
+        params = ("{state}".format(state=self.SCAN_STATE_PENDING))
         pendingScans = self.db.fetchAll(query, params)
         for pScan in pendingScans:
             self.clog.critical(
-                f"Found pending scan: {pScan[0]} => {pScan[1]} '{pScan[2]}' '{pScan[3]}'")
+                "Found pending scan: {id} => {state} '{name}' '{path}'".format(id=pScan[0], state=pScan[1], name=pScan[2], path=pScan[3]))
 
             # 2. Set scan id for FS object.
             self.fsobject.setScanId(pScan[0])
@@ -85,7 +85,8 @@ class Scan:
 
     def handleScannedState(self, scan):
         # 2.b Scan is in SCANNED state
-        query = f"UPDATE scan SET state = {self.SCAN_STATE_SCANNED} WHERE id = {scan[0]}"
+        query = "UPDATE scan SET state = {state} WHERE id = {id}".format(
+            id=scan[0], state=self.SCAN_STATE_SCANNED)
         self.db.execDelete(query, None, True)
 
         # 2.b.1 Identify and mark duplicate files
@@ -96,7 +97,8 @@ class Scan:
 
     def handleUpdateFolderSizeState(self, scan):
         # 2.c Scan is in UPDATE_FOLDER_SIZE state
-        query = f"UPDATE scan SET state = {self.SCAN_STATE_UPDATE_FOLDER_SIZE} WHERE id = {scan[0]}"
+        query = "UPDATE scan SET state = {state} WHERE id = {id}".format(
+            id=scan[0], state=self.SCAN_STATE_UPDATE_FOLDER_SIZE)
         self.db.execDelete(query, None, True)
 
         # 2.c.1 Update all folder size by summing up the size of the folder and files it has.
@@ -107,7 +109,8 @@ class Scan:
 
     def handleDuplicateFolderState(self, scan):
         # 2.d Scan is in DUPLICATE FOLDER state
-        query = f"UPDATE scan SET state = {self.SCAN_STATE_DUPLICATE_FOLDER} WHERE id = {scan[0]}"
+        query = "UPDATE scan SET state = {state} WHERE id = {id}".format(
+            id=scan[0], state=self.SCAN_STATE_DUPLICATE_FOLDER)
         self.db.execDelete(query, None, True)
 
         # 2.d.1 Update all folder as duplicate, if all its files and sub folders are duplicate
@@ -118,7 +121,8 @@ class Scan:
 
     def handleCompletedState(self, scan):
         # 2.d Scan state is COMPLETED
-        query = f"UPDATE scan SET state = {self.SCAN_STATE_COMPLETED} WHERE id = {scan[0]}"
+        query = "UPDATE scan SET state = {state} WHERE id = {id}".format(
+            id=scan[0], state=self.SCAN_STATE_COMPLETED)
         self.db.execDelete(query, None, True)
 
     def scanObjectsAndAdd(self, scanId, rootPath):
@@ -128,7 +132,7 @@ class Scan:
 
         # Insert main path as root.
         totalFolders += 1
-        self.fsobject.insert(self.fsobject.FSOBJECT_FOLDER,
+        self.fsobject.insert(self.fsobject.FSOBJECT_TYPE_FOLDER,
                              None, rootPath, -1, True)
 
         for parent, dirs_list, files_list in os.walk(rootPath):
@@ -136,7 +140,7 @@ class Scan:
             for d in dirs_list:
                 totalFolders += 1
                 self.fsobject.insert(
-                    self.fsobject.FSOBJECT_FOLDER, parent, d, -1, True)
+                    self.fsobject.FSOBJECT_TYPE_FOLDER, parent, d, -1, True)
 
             # Add all file objects.
             for f in files_list:
@@ -144,7 +148,7 @@ class Scan:
                 filePath = os.path.join(parent, f)
                 fileSize = os.path.getsize(filePath)
                 self.fsobject.insert(
-                    self.fsobject.FSOBJECT_FILE, parent, f, fileSize, False)
+                    self.fsobject.FSOBJECT_TYPE_FILE, parent, f, fileSize, False)
 
                 totalSizeInBytes += fileSize
 
@@ -152,7 +156,8 @@ class Scan:
             self.fsobject.commitTransactions()
 
         # Update folder and files count, total size to scan
-        query = f"UPDATE scan SET folder_count = {totalFolders}, file_count = {totalFiles}, total_size_in_bytes = {totalSizeInBytes} WHERE id = {scanId}"
+        query = "UPDATE scan SET folder_count = {totalFolders}, file_count = {totalFiles}, total_size_in_bytes = {totalSizeInBytes} WHERE id = {id}".format(
+            id=scanId, totalFolders=totalFolders, totalFiles=totalFiles, totalSizeInBytes=totalSizeInBytes)
         self.db.execDelete(query, None, True)
 
         self.clog.critical(
