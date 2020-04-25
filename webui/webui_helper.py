@@ -48,3 +48,38 @@ class WebUIHelper:
 
   def getReadableNumber(self, n):
     return locale.format("%d", n, grouping = True)
+
+  def getNewScanForm(self, scanName = "", message = None):
+    htmlForm = '''
+    <form id="formNewScan" name="formNewScan" action="/scan/new" method="POST" enctype="multipart/form-data">
+      <table border="1" cellpadding="5" cellspacing="5">
+        <tr>
+          <td colspan="2"><center>CREATE A NEW SCAN</center></td>
+        <tr>
+    '''
+
+    if message is not None:
+      htmlForm += '''
+        <tr>
+          <td colspan="2"><center>{message}</center></td>
+        <tr>
+      '''.format(message=message)
+
+    htmlForm += '''
+        <tr>
+          <td>Name</td>
+          <td><input type="text" id="txtName" name="txtName" length="50" max-length="40" value="{scanName}" /></td>
+        </tr>
+        <tr>
+          <td>Root Path</td>
+          <td><input type="file" id="filePath" name="filePath" length="150" webkitdirectory=true value="" /></td>
+        </tr>
+        <tr>
+          <td>&nbsp;</td>
+          <td><input type="submit" value="SCAN" onClick="alert(document.getElementById('filePath').value)" /></td>
+        </tr>
+      </table>
+    </form>
+    '''.format(scanName=scanName)
+
+    return htmlForm

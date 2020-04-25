@@ -1,11 +1,13 @@
-from bottle import route, run
+import os
+from bottle import get, post, request, run
 from core.sqlite_db import DB
 from core.scan import Scan
 from webui.webui_helper import WebUIHelper
 
 webuiHelper = WebUIHelper()
 
-@route('/')
+
+@get('/')
 def scan_list():
   """
   Function that servers /scan/list, returns list of the current scans.
@@ -15,7 +17,7 @@ def scan_list():
   scan = Scan()
   db = DB()
   query = """SELECT id, name, root_path, state, folder_count, file_count, total_size_in_bytes,
-    created_timestamp FROM scan ORDER BY created_timestamp DESC"""
+  created_timestamp FROM scan ORDER BY created_timestamp DESC"""
   scans = db.fetchAll(query, None)
   response = '''
     <table cellspacing="5" cellpadding="5" border="1">
@@ -31,45 +33,45 @@ def scan_list():
       </tr>
   '''
   for s in scans:
-    response += f"""
-      <tr>
-        <td>{s[0]}</td>
-        <td>{s[1]}</td>
-        <td>{s[2]}</td>
-        <td>{scan.getReadableState(s[3])}</td>
-        <td>{webuiHelper.getReadableNumber(s[4])}</td>
-        <td>{webuiHelper.getReadableNumber(s[5])}</td>
-        <td>{webuiHelper.getReadableObjectSize(s[6])}</td>
-        <td>{webuiHelper.getReadableTimestamp(s[7])}</td>
-      </tr>
-      """
-
+      response += f"""
+    <tr>
+      <td>{s[0]}</td>
+      <td>{s[1]}</td>
+      <td>{s[2]}</td>
+      <td>{scan.getReadableState(s[3])}</td>
+      <td>{webuiHelper.getReadableNumber(s[4])}</td>
+      <td>{webuiHelper.getReadableNumber(s[5])}</td>
+      <td>{webuiHelper.getReadableObjectSize(s[6])}</td>
+      <td>{webuiHelper.getReadableTimestamp(s[7])}</td>
+    </tr>
+    """
   response += "</table>"
 
   return webuiHelper.getHTMLPage(response)
 
-@route('/scan/new')
-def scan_new():
+@get('/scan/new')
+def scan_new_get():
   """
   Function to server new scan request, it will be added to the list and core server will process it.
   """
-  return webuiHelper.getHTMLPage('''
-    <table border="1" cellpadding="5" cellspacing="5">
-      <tr>
-        <td colspan="2"><center>CREATE A NEW SCAN</center></td>
-      <tr>
-      <tr>
-        <td>Name</td>
-        <td><input type="text" length="50" max-length="40" value="" /></td>
-      </tr>
-      <tr>
-        <td>Root Path</td>
-        <td><input type="file" length="150" value="" /></td>
-      </tr>
-      <tr>
-        <td>&nbsp;</td>
-        <td><input type="button" value="SCAN" /></td>
-      </tr>
-    </table>
-  ''')
+  return webuiHelper.getHTMLPage(webuiHelper.getNewScanForm("", None))
+
+@post('/scan/new')
+def scan_new_post():
+  """
+  Function triggered by new scan form upon submit. This will place a new scan request in database.
+  """
+  scanName = request.forms.get("txtName") or None
+  if scanName is None:
+    return webuiHelper.getHTMLPage(webuiHelper.getNewScanForm("", "Missing scan name."))
+
+  rootPath = request.files.get("filePath") or None
+  if rootPath is None:
+    return webuiHelper.getHTMLPage(webuiHelper.getNewScanForm(scanName, "Missing file name."))
+  else:
+    object_methods = [method_name for method_name in dir(rootPath) if not callable(getattr(rootPath, method_name))]
+    return webuiHelper.getHTMLPage(webuiHelper.getNewScanForm("", "New scan request created successfully. {dt}".format(dt=rootPath.file.name)))
+
+  return webuiHelper.getHTMLPage(webuiHelper.getNewScanForm("", "New scan request created successfully."))
+
 run(host='localhost', port=8080, debug=True)
