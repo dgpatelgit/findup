@@ -59,7 +59,7 @@ while True:
         sleep(3)
 
         # TODO: Read new root from database and set it here, if nothig is found than sleep for 2 seconds.
-        rootPath = "/Users/dpatel/Documents/code/kiott-qa/NimishaFirstApp"
+        rootPath = "/run/media/dgpatel/DGP"
 
         # Add new scan
         timestamp = int(round(time.time() * 1000))
