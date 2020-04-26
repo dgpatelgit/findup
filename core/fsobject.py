@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+from core.utility import Utility
 from core.sqlite_db import DB
 from core.hash import Hash
 
@@ -25,6 +26,9 @@ class FsObject:
         # Create logger
         self.clog = logging.getLogger("CORE.FSOBJECT")
 
+        # Create utlity object
+        self.utility = Utility()
+
         # DB object
         self.db = db
 
@@ -39,6 +43,8 @@ class FsObject:
         self.scanId = scanId
 
     def insert(self, fsobjectType, parentFullPath, objectName, sizeInBytes, commitImmediately):
+        objectName = self.utility.encodeDBString(objectName)
+
         timestamp = int(round(time.time() * 1000))
         fullPath = None
         if parentFullPath is None:
@@ -46,6 +52,7 @@ class FsObject:
             self.currParentFullPath = ""
             self.currParentId = 0
         else:
+            parentFullPath = self.utility.encodeDBString(parentFullPath)
             fullPath = os.path.join(parentFullPath, objectName)
             if self.currParentFullPath != parentFullPath:
                 query = "SELECT id FROM fsobject WHERE scan_id = {id} AND type = {type} AND full_path = '{path}' LIMIT 0,1".format(
@@ -84,13 +91,16 @@ class FsObject:
             self.clog.info("Computing hash for {pFile}".format(pFile=pFile))
 
             # 2.a.1 Read file content and compute hash
-            hash.setFilePath(pFile[1])
+            hash.setFilePath(self.utility.decodeDBString(pFile[1]))
 
             # 2.a.2 Update content hash
             query = "UPDATE fsobject SET content_hash = '{h}', state = {state} WHERE id = {scanId}".format(
                 scanId=pFile[0], state=self.FSOBJECT_STATE_HASH_COMPUTED, h=hash.getFileHash())
 
-            self.db.execDelete(query, None, True)
+            self.db.execDelete(query, None, False)
+
+        # 2.b Commit all hash update to database
+        self.db.commit()
 
         # 3. Once all hash computes are done, mark duplicate based on content hash and size
         query = "UPDATE fsobject SET state = {setState} WHERE scan_id = {scanId} AND type = {type} AND state = {currState} AND content_hash IN (SELECT content_hash FROM fsobject WHERE scan_id = {scanId} AND type = {type} GROUP BY content_hash HAVING COUNT(*) > 1)".format(

@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+from core.utility import Utility
 from core.sqlite_db import DB
 from core.fsobject import FsObject
 
@@ -20,6 +21,9 @@ class Scan:
         # Create logger
         self.clog = logging.getLogger("CORE.SCAN")
 
+        # Create utlity object
+        self.utility = Utility()
+
         # DB object
         self.db = DB()
 
@@ -30,6 +34,9 @@ class Scan:
         """
         Function creates a new scan entry in the databse with pending as status.
         """
+        name = self.utility.encodeDBString(name)
+        rootPath = self.utility.encodeDBString(rootPath)
+
         timestamp = int(round(time.time() * 1000))
         query = "INSERT INTO scan(name, root_path, state, created_timestamp, modified_timestamp) \
       VALUES (?, ?, ?, ?, ?)"
@@ -57,8 +64,8 @@ class Scan:
         }
 
         # 1. Get pending scans
-        query = "SELECT id, state, name, root_path FROM scan WHERE state = ?"
-        params = ("{state}".format(state=self.SCAN_STATE_PENDING))
+        query = "SELECT id, state, name, root_path FROM scan WHERE state != ?"
+        params = ("{state}".format(state=self.SCAN_STATE_COMPLETED))
         pendingScans = self.db.fetchAll(query, params)
         for pScan in pendingScans:
             self.clog.critical(

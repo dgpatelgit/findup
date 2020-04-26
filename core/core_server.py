@@ -51,27 +51,21 @@ log.info("Created required database tables")
 mainMenu = MainMenu()
 log.info("Created main menu object")
 
-# Entering main loop now.
-log.critical("Core server entering infinite loop")
-while True:
-    try:
-        # display menu main and it will continue till exit is pressed.
-        mainMenu.display()
+try:
+    # display menu main and it will continue till exit is pressed.
+    log.critical("Core server display main menu")
+    mainMenu.display()
 
-        log.critical("Gracefully terminating the core server")
-        break
+# Accept Ctrl+c and Ctrl+x commands to exit the core server.
+except (KeyboardInterrupt, SystemExit):
+    log.warning("Received ctrl+c / ctrl+x commands to quit the core server")
 
-    # Accept Ctrl+c and Ctrl+x commands to exit the core server.
-    except (KeyboardInterrupt, SystemExit):
-        log.warning("Received ctrl+c / ctrl+x commands to quit the core server")
-        raise
+# All other exceptions should not kill the server.
+except Exception as ex:
+    log.error("An exception occurred in core server loop: %s", ex)
+    traceback.print_exception(None, ex, ex.__traceback__)
 
-    # All other exceptions should not kill the server.
-    except Exception as ex:
-        log.error("An exception occurred in core server loop: %s", ex)
-        traceback.print_exception(None, ex, ex.__traceback__)
+finally:
+    log.warning("Finally block is empty")
 
-    finally:
-        log.warning("Finally block is empty")
-
-log.critical("Core server terminated")
+log.critical("Core server terminated, Bye bye.")
