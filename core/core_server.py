@@ -68,4 +68,4 @@ except Exception as ex:
 finally:
     log.warning("Finally block is empty")
 
-log.critical("Core server terminated, Bye bye.")
+log.critical("Core server terminated, Bye bye. Have a nice day!!")
